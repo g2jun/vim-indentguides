@@ -11,6 +11,7 @@ let g:indentguides_toggleListMode = get(g:, 'indentguides_toggleListMode', 1)
 let g:indentguides_guidewidth = get(g:, 'indentguides_guidewidth', &l:shiftwidth)
 let g:indentguides_conceal_color = get(g:, 'indentguides_conceal_color', 'ctermfg=238 ctermbg=NONE guifg=Grey27 guibg=NONE')
 let g:indentguides_specialkey_color = get(g:, 'indentguides_specialkey_color',  'ctermfg=238 ctermbg=NONE guifg=Grey27 guibg=NONE')
+let g:indentguides_enabled = get(g:, 'indentguides_enabled', 1)
 
 function! s:SetIndentGuideHighlights()
   if hlexists('IndentGuideSpaces')
@@ -40,14 +41,17 @@ function! s:ToggleIndentGuides(user_initiated)
   let w:original_conceallevel = get(w:, 'original_conceallevel', &l:conceallevel)
 
   if !a:user_initiated
+    " not toggled on or off yet
     if b:indentguides_on == -1
-      if index(g:indentguides_ignorelist, &filetype) == -1
+      if index(g:indentguides_ignorelist, &filetype) == -1 && g:indentguides_enabled
         let toggle_indentguides = 1
       else
         return
       endif
+    " already toggled on
     elseif b:indentguides_on == 1
       let toggle_indentguides = 1
+    " already toggle off
     else
       return
     endif
