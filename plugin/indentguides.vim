@@ -12,25 +12,26 @@ let g:indentguides_guidewidth = get(g:, 'indentguides_guidewidth', &l:shiftwidth
 let g:indentguides_conceal_color = get(g:, 'indentguides_conceal_color', 'ctermfg=238 ctermbg=NONE guifg=Grey27 guibg=NONE')
 let g:indentguides_specialkey_color = get(g:, 'indentguides_specialkey_color',  'ctermfg=238 ctermbg=NONE guifg=Grey27 guibg=NONE')
 
-function! s:SetIndentGuideHighlights(user_initiated)
-  if index(g:indentguides_ignorelist, &filetype) == -1 || a:user_initiated
-    if !a:user_initiated
-      silent! syntax clear IndentGuideSpaces
-      silent! syntax clear IndentGuideDraw
-    endif
-    execute "highlight Conceal " . g:indentguides_conceal_color
-    execute "highlight SpecialKey " . g:indentguides_specialkey_color
-
-    if g:indentguides_firstlevel
-      execute printf('syntax match IndentGuideDraw /^\zs\ \ze\ \{%i}/ containedin=ALL conceal cchar=', g:indentguides_guidewidth - 1) . g:indentguides_spacechar
-    endif
-    execute 'syntax match IndentGuideSpaces /^\ \+/ containedin=ALL contains=IndentGuideDraw keepend'
-    execute printf('syntax match IndentGuideDraw /\ \{%i}\zs \ze/ contained conceal cchar=', g:indentguides_guidewidth - 1) . g:indentguides_spacechar
+function! s:SetIndentGuideHighlights()
+  if hlexists('IndentGuideSpaces')
+    syntax clear IndentGuideSpaces
   endif
+  if hlexists('IndentGuideDraw')
+    syntax clear IndentGuideDraw
+  endif
+
+  if g:indentguides_firstlevel
+    execute printf('syntax match IndentGuideDraw /^\zs\ \ze\ \{%i}/ containedin=ALL conceal cchar=', g:indentguides_guidewidth - 1) . g:indentguides_spacechar
+  endif
+  execute 'syntax match IndentGuideSpaces /^\ \+/ containedin=ALL contains=IndentGuideDraw keepend'
+  execute printf('syntax match IndentGuideDraw /\ \{%i}\zs \ze/ contained conceal cchar=', g:indentguides_guidewidth - 1) . g:indentguides_spacechar
+
+  execute "highlight Conceal " . g:indentguides_conceal_color
+  execute "highlight SpecialKey " . g:indentguides_specialkey_color
 endfunction
 
 function! s:ToggleIndentGuides(user_initiated)
-  let b:toggle_indentguides = get(b:, 'toggle_indentguides', 1)
+  let b:indentguides_on = get(b:, 'indentguides_on', -1)
   let g:indentguides_guidewidth = &l:shiftwidth
 
   " TODO-TK: local and global listchars are the same, and s: variables are failing (??)
@@ -39,14 +40,27 @@ function! s:ToggleIndentGuides(user_initiated)
   let w:original_conceallevel = get(w:, 'original_conceallevel', &l:conceallevel)
 
   if !a:user_initiated
-    if index(g:indentguides_ignorelist, &filetype) != -1 || !b:toggle_indentguides
-      " skip if not user initiated, and is either disabled, an ignored filetype, or already toggled on
+    if b:indentguides_on == -1
+      if index(g:indentguides_ignorelist, &filetype) == -1
+        let toggle_indentguides = 1
+      else
+        return
+      endif
+    elseif b:indentguides_on == 1
+      let toggle_indentguides = 1
+    else
       return
+    endif
+  else  " user initiated toggle
+    if b:indentguides_on == 1
+      let toggle_indentguides = 0
+    else
+      let toggle_indentguides = 1
     endif
   endif
 
-  if b:toggle_indentguides
-    call s:SetIndentGuideHighlights(a:user_initiated)
+  if toggle_indentguides
+    call s:SetIndentGuideHighlights()
 
     " TODO: figure out why checking each addition individually breaks things for tab (unicode?)
     let listchar_guides = ',tab:' . g:indentguides_tabchar . ' ,trail:·'
@@ -58,7 +72,7 @@ function! s:ToggleIndentGuides(user_initiated)
     if g:indentguides_toggleListMode
       setlocal list
     endif
-    let b:toggle_indentguides = 0
+    let b:indentguides_on = 1
   else
     syntax clear IndentGuideSpaces
     syntax clear IndentGuideDraw
@@ -69,13 +83,14 @@ function! s:ToggleIndentGuides(user_initiated)
     if g:indentguides_toggleListMode
       setlocal nolist
     endif
-    let b:toggle_indentguides = 1
+    let b:indentguides_on = 0
   endif
 endfunction
 
 augroup IndentGuides
-  au! BufRead,ColorScheme * call s:SetIndentGuideHighlights(0)
-  au! BufWinEnter * call s:ToggleIndentGuides(0)
+  au!
+  au ColorScheme * call s:SetIndentGuideHighlights()
+  au BufEnter * call s:ToggleIndentGuides(0)
 augroup END
 
 command! IndentGuidesToggle call s:ToggleIndentGuides(1)
