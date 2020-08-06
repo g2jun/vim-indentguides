@@ -33,6 +33,11 @@ function! s:ToggleIndentGuides(user_initiated)
   let b:toggle_indentguides = get(b:, 'toggle_indentguides', 1)
   let g:indentguides_guidewidth = &l:shiftwidth
 
+  " TODO-TK: local and global listchars are the same, and s: variables are failing (??)
+  let g:original_listchars = get(g:, 'original_listchars', &g:listchars)
+  let w:original_concealcursor = get(w:, 'original_concealcursor', &l:concealcursor)
+  let w:original_conceallevel = get(w:, 'original_conceallevel', &l:conceallevel)
+
   if !a:user_initiated
     if index(g:indentguides_ignorelist, &filetype) != -1 || !b:toggle_indentguides
       " skip if not user initiated, and is either disabled, an ignored filetype, or already toggled on
@@ -42,9 +47,6 @@ function! s:ToggleIndentGuides(user_initiated)
 
   if b:toggle_indentguides
     call s:SetIndentGuideHighlights(a:user_initiated)
-
-    " TODO-TK: local and global listchars are the same, and s: variables are failing (??)
-    let g:original_listchars = get(g:, 'original_listchars', &g:listchars)
 
     " TODO: figure out why checking each addition individually breaks things for tab (unicode?)
     let listchar_guides = ',tab:' . g:indentguides_tabchar . ' ,trail:·'
@@ -61,8 +63,8 @@ function! s:ToggleIndentGuides(user_initiated)
     syntax clear IndentGuideSpaces
     syntax clear IndentGuideDraw
 
-    let &l:conceallevel = &g:conceallevel
-    let &l:concealcursor = &g:concealcursor
+    let &l:conceallevel = w:original_conceallevel
+    let &l:concealcursor = w:original_concealcursor
     let &g:listchars = g:original_listchars
     if g:indentguides_toggleListMode
       setlocal nolist
