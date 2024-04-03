@@ -1,3 +1,13 @@
+```diff
+- Note: This plugin is no longer being maintained.
+```
+```vim
+" Since Vim v8.2.5066 (2022-06-07), you could use `leadmultispace` in listchars for equivalent behaviour
+" feel free to use this conceal-less alternative supporting varying buffer shift widths (use BufEnter if needed):
+set list
+autocmd OptionSet shiftwidth execute 'setlocal listchars=trail:·,tab:│\ ,multispace:┆' . repeat('\ ', &sw - 1)
+```
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/thaerkh/vim-indentguides/master/wiki/screenshots/demo.png" >
 </p>
@@ -17,6 +27,8 @@ If you'd like to change the default space and tab indent characters, modify the 
 let g:indentguides_spacechar = '┆'
 let g:indentguides_tabchar = '|'
 ```
+
+The plugin will set the conceallevel to '2 if' except if it is already set to '1' or '2'. If `concealcursor` it not modifed it will be set to `inc`, to disable this set it to an nonempty value or set `let g:indentguides_concealcursor_unaltered` to any nonempty value.
 
 # Installation
 

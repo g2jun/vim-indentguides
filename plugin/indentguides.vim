@@ -4,7 +4,7 @@
 " URL:     https://github.com/thaerkh/vim-indentguides
 
 let g:indentguides_firstlevel = get(g:, 'indentguides_firstlevel', 0)
-let g:indentguides_ignorelist = get(g:, 'indentguides_ignorelist', [])
+let g:indentguides_ignorelist = get(g:, 'indentguides_ignorelist', ['asciidoc', 'gitcommit', 'markdown', 'tex', 'text', ''])
 let g:indentguides_spacechar = get(g:, 'indentguides_spacechar', '┆')
 let g:indentguides_tabchar = get(g:, 'indentguides_tabchar', '|')
 let g:indentguides_toggleListMode = get(g:, 'indentguides_toggleListMode', 1)
@@ -71,8 +71,12 @@ function! s:ToggleIndentGuides(user_initiated)
     if &g:listchars !~ listchar_guides
       let &g:listchars = &g:listchars . listchar_guides
     endif
-    setlocal concealcursor=inc
-    setlocal conceallevel=2
+    if &conceallevel == 0 || &conceallevel == 3
+      setlocal conceallevel=2
+    endif
+    if &concealcursor ==# '' && !exists('g:indentguides_concealcursor_unaltered')
+      setlocal concealcursor=inc
+    endif
     if g:indentguides_toggleListMode
       setlocal list
     endif
